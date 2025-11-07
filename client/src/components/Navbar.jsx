@@ -1,24 +1,36 @@
 import React from "react";
-import "../styles/navbar.css";
+import { Link } from "react-router-dom";
+import "./Navbar.css";
 
-function Navbar({ darkMode, toggleTheme }) {
+const Navbar = ({ darkMode, toggleTheme, user, handleLogout }) => {
   return (
-    <nav>
-      <h1 className="brand-text">CrediBot</h1>
-      <div className="theme-toggle">
-        <input
-          type="checkbox"
-          id="theme-switch"
-          className="theme-switch"
-          checked={darkMode}
-          onChange={toggleTheme}
-        />
-        <label htmlFor="theme-switch" className="theme-switch-label">
-          <span className="theme-switch-icon"></span>
-        </label>
+    <nav className={`navbar ${darkMode ? "dark" : ""}`}>
+      <div className="navbar-left">
+        <h1 className="brand">💬 SARVASVA</h1>
+      </div>
+
+      <div className="navbar-right">
+        <button className="theme-toggle" onClick={toggleTheme}>
+          {darkMode ? "☀️ Light" : "🌙 Dark"}
+        </button>
+
+        {!user ? (
+          <>
+            <Link className="nav-btn" to="/login">
+              Login
+            </Link>
+            <Link className="nav-btn" to="/signup">
+              Signup
+            </Link>
+          </>
+        ) : (
+          <button className="logout-btn" onClick={handleLogout}>
+            Logout
+          </button>
+        )}
       </div>
     </nav>
   );
-}
+};
 
 export default Navbar;

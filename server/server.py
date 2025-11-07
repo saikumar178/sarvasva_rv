@@ -1,8 +1,11 @@
 from fastapi import FastAPI, Request, UploadFile, File, HTTPException, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
+import firebase_admin
+from firebase_admin import credentials, auth, firestore
+from fastapi import Depends, Header
 import uvicorn
-from googletrans import Translator
+from deep_translator import GoogleTranslator as Translator
 import io
 from gtts import gTTS
 import speech_recognition as sr
@@ -12,6 +15,23 @@ import os
 import legacy
 import sys
 sys.modules["cgi"] = legacy
+
+
+# Initialize Firebase Admin SDK
+cred = credentials.Certificate("firebase-service-account.json")
+firebase_admin.initialize_app(cred)
+db = firestore.client()
+
+# Middleware / dependency to verify Firebase token
+
+
+def verify_firebase_token(authorization: str = Header(...)):
+    try:
+        token = authorization.split(" ")[1]
+        decoded_token = auth.verify_id_token(token)
+        return decoded_token
+    except Exception as e:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
 
 
 app = FastAPI()
@@ -37,7 +57,7 @@ async def chat(request: Request):
             return {"response": "Please provide a message."}
 
         # Step 1 — Translate input message to English
-        translated_to_english = translator.translate(message, dest="en").text
+        translated_to_english = Translator(source='auto', target='en').translate(message)
 
         # Step 2 — Generate AI response (mock or real)
         # Replace with your model call if needed
@@ -45,12 +65,43 @@ async def chat(request: Request):
 
         # Step 3 — Translate AI response back to selected language
         lang_code = language.split("-")[0]  # e.g., hi-IN → hi
-        translated_back = translator.translate(ai_response_en, dest=lang_code).text
+        translated_back = Translator(source='en', target=lang_code).translate(ai_response_en)
 
         return {"response": translated_back}
     except Exception as e:
         print(f"Error in /chat: {str(e)}")
         return {"response": "Sorry, I encountered an error processing your message."}
+
+
+@app.get("/")
+def home():
+    return {"message": "Backend running"}
+
+
+@app.post("/verify")
+async def verify_token(request: Request):
+    try:
+        data = await request.json()
+        token = data.get("token")
+        decoded_token = auth.verify_id_token(token)
+
+        uid = decoded_token["uid"]
+        email = decoded_token.get("email")
+        name = decoded_token.get("name", "Unknown")
+
+        # Save or update user in Firestore
+        user_ref = db.collection("users").document(uid)
+        user_ref.set({
+            "uid": uid,
+            "email": email,
+            "name": name
+        }, merge=True)
+
+        return {"success": True, "user": {"uid": uid, "email": email, "name": name}}
+    except Exception as e:
+        print("Error verifying token:", e)
+        return {"success": False, "error": str(e)}
+    
 
 @app.post("/speech-to-text")
 async def speech_to_text(
@@ -221,9 +272,21 @@ async def text_to_speech(request: Request):
         print(f"Error in /text-to-speech: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error generating speech: {str(e)}")
 
+
 @app.get("/health")
 async def health():
     return {"status": "ok", "message": "Server is running"}
+
+
+@app.get("/user")
+async def get_user(user=Depends(verify_firebase_token)):
+    return {
+        "uid": user["uid"],
+        "email": user.get("email"),
+        "name": user.get("name"),
+        "language": user.get("language", "en-IN"),
+    }
+
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=5000)

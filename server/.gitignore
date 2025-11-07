@@ -1,0 +1,14 @@
+# Ignore translation/audio cache
+ranslate/
+translate/
+*.mp3
+*.wav
+*.tmp
+
+# Ignore Python virtual env
+.venv/
+__pycache__/
+
+# Ignore service account key
+firebase-service-account.json
+
