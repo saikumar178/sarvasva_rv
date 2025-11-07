@@ -1,0 +1,91 @@
+nav {
+  background-color: var(--card-background);
+  color: var(--text-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  font-size: 1.5rem;
+  font-weight: 600;
+  position: sticky;
+  top: 0;
+  width: 100%;
+  z-index: 100;
+  box-shadow: 0 2px 8px var(--shadow-color);
+  transition: background-color var(--transition-speed), color var(--transition-speed);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.brand-text {
+  left: 50%;
+  display: flex;
+  justify-content: center;
+  font-size: 2rem;
+  font-weight: 700;
+  transition: opacity 0.3s ease;
+}
+
+/* Theme Toggle */
+.theme-toggle {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  z-index: 10;
+}
+
+.theme-switch {
+  opacity: 0;
+  position: absolute;
+}
+
+.theme-switch-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  width: 50px;
+  height: 26px;
+  background: var(--card-background);
+  border-radius: 100px;
+  position: relative;
+  box-shadow: 0 2px 5px var(--shadow-color);
+  transition: background-color var(--transition-speed);
+}
+
+.theme-switch-label:after {
+  content: "";
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  background: var(--primary-color);
+  transition: transform var(--transition-speed), background-color var(--transition-speed);
+}
+
+.theme-switch:checked + .theme-switch-label:after {
+  transform: translateX(24px);
+}
+
+.theme-switch-icon {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 6px;
+  box-sizing: border-box;
+}
+
+.theme-switch-icon:before {
+  content: "☀️";
+  font-size: 12px;
+  margin-left: 2px;
+}
+
+.theme-switch:checked + .theme-switch-label .theme-switch-icon:before {
+  content: "🌙";
+  margin-left: 26px;
+}
